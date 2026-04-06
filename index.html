@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>소방시설 외관점검표</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
+:root {
+  --bg:#f4f6fb; --sur:#fff; --sur2:#f0f3f9;
+  --bd:#e2e8f4; --bd2:#d0d9ee;
+  --red:#ef4444; --green:#12b981; --blue:#3b6ef6; --amber:#f59e0b;
+  --tx:#1e2a3a; --mu:#64748b; --mu2:#94a3b8;
+  --sh:0 1px 4px rgba(60,80,140,.07),0 4px 16px rgba(60,80,140,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nanum Gothic',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;max-width:520px;margin:0 auto;font-size:14px;padding-bottom:100px}
+
+/* 헤더 */
+.header{background:linear-gradient(135deg,#1e3a5f,#2d5a8e);color:#fff;padding:20px 16px 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.header h1{font-size:16px;font-weight:800;margin-bottom:4px}
+.header p{font-size:11px;opacity:.8}
+
+/* 기본정보 */
+.info-card{background:var(--sur);margin:12px 16px;border-radius:16px;padding:16px;box-shadow:var(--sh);border:1.5px solid var(--bd)}
+.info-title{font-size:12px;font-weight:800;color:var(--blue);margin-bottom:12px;letter-spacing:.5px}
+.info-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.info-row:last-child{margin-bottom:0}
+.info-label{font-size:12px;font-weight:700;color:var(--mu);white-space:nowrap;min-width:60px}
+.info-input{flex:1;padding:9px 12px;border-radius:8px;border:1.5px solid var(--bd2);background:var(--sur2);font-family:inherit;font-size:13px;color:var(--tx);outline:none;transition:border-color .2s}
+.info-input:focus{border-color:var(--blue);background:#fff}
+.checker-row{display:flex;gap:8px;flex:1}
+.checker-opt{flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--bd2);background:var(--sur2);font-family:inherit;font-size:12px;font-weight:700;color:var(--mu);cursor:pointer;text-align:center;transition:all .2s}
+.checker-opt.on-입주자{background:var(--blue);border-color:var(--blue);color:#fff}
+.checker-opt.on-소방{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* 섹션 */
+.section{margin:12px 16px 0}
+.section-header{background:linear-gradient(135deg,#1e3a5f,#2d5a8e);color:#fff;padding:10px 14px;border-radius:12px 12px 0 0;font-size:13px;font-weight:800;letter-spacing:.3px}
+.section-body{background:var(--sur);border:1.5px solid var(--bd);border-top:none;border-radius:0 0 12px 12px;overflow:hidden;box-shadow:var(--sh)}
+
+/* 점검 항목 */
+.item-group{border-bottom:1px solid var(--bd)}
+.item-group:last-child{border-bottom:none}
+.item-group-title{padding:10px 14px 6px;font-size:11px;font-weight:800;color:var(--mu);background:var(--sur2);letter-spacing:.3px}
+.item{padding:10px 14px;border-bottom:1px solid var(--bg);display:flex;flex-direction:column;gap:8px}
+.item:last-child{border-bottom:none}
+.item-text{font-size:13px;color:var(--tx);line-height:1.5}
+.item-btns{display:flex;gap:6px}
+.item-btn{flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--bd2);background:var(--sur2);font-family:inherit;font-size:12px;font-weight:700;color:var(--mu);cursor:pointer;transition:all .2s;text-align:center}
+.item-btn.sel-정상{background:var(--green);border-color:var(--green);color:#fff}
+.item-btn.sel-불량{background:var(--red);border-color:var(--red);color:#fff}
+.item-btn.sel-해당없음{background:var(--mu2);border-color:var(--mu2);color:#fff}
+
+/* 하단 버튼 */
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--sur);border-top:1px solid var(--bd);padding:12px 16px;display:flex;gap:10px;box-shadow:0 -2px 12px rgba(60,80,140,.1)}
+.reset-btn{padding:14px 20px;border-radius:12px;border:1.5px solid var(--bd2);background:var(--sur2);color:var(--mu);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.pdf-btn{flex:1;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#1e3a5f,#2d5a8e);color:#fff;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(30,58,95,.3)}
+
+/* 진행률 */
+.progress-wrap{margin:12px 16px 0;background:var(--sur);border-radius:12px;padding:12px 14px;border:1.5px solid var(--bd);box-shadow:var(--sh)}
+.progress-top{display:flex;justify-content:space-between;margin-bottom:8px}
+.progress-label{font-size:12px;font-weight:700;color:var(--mu)}
+.progress-count{font-size:12px;font-weight:800;color:var(--blue)}
+.progress-bar{height:8px;background:var(--bd);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:4px;transition:width .3s}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>&#128293; 소방시설 외관점검표</h1>
+  <p>세대 점검용 · 소방시설 설치 및 관리에 관한 법률 시행규칙</p>
+</div>
+
+<!-- 기본 정보 -->
+<div class="info-card">
+  <div class="info-title">&#128221; 기본 정보</div>
+  <div class="info-row">
+    <span class="info-label">대상명</span>
+    <input class="info-input" id="f-name" placeholder="건물명 입력" type="text">
+  </div>
+  <div class="info-row">
+    <span class="info-label">동호수</span>
+    <input class="info-input" id="f-room" placeholder="예: 101동 302호" type="text">
+  </div>
+  <div class="info-row">
+    <span class="info-label">점검일</span>
+    <input class="info-input" id="f-date" type="date">
+  </div>
+  <div class="info-row">
+    <span class="info-label">전화번호</span>
+    <input class="info-input" id="f-tel" placeholder="010-0000-0000" type="tel">
+  </div>
+  <div class="info-row">
+    <span class="info-label">점검자</span>
+    <div class="checker-row">
+      <button class="checker-opt" id="chk-입주자" onclick="setChecker('입주자')">입주자</button>
+      <button class="checker-opt" id="chk-소방" onclick="setChecker('소방안전관리자')">소방안전관리자</button>
+    </div>
+  </div>
+</div>
+
+<!-- 진행률 -->
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span class="progress-label">점검 진행률</span>
+    <span class="progress-count" id="prog-count">0 / 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<!-- 점검 항목들 -->
+<div id="check-sections"></div>
+
+<div class="bottom-bar">
+  <button class="reset-btn" onclick="resetAll()">초기화</button>
+  <button class="pdf-btn" onclick="makePDF()">&#128196; PDF 저장</button>
+</div>
+
+<script>
+var checker = '';
+var results = {};
+
+// 점검 데이터
+var sections = [
+  {
+    title: '소화 설비',
+    icon: '&#127798;',
+    groups: [
+      {
+        name: '소화기',
+        items: [
+          '손쉽게 사용할 수 있는 장소에 설치 여부',
+          '용기 변형·손상·부식 여부',
+          '안전핀 체결 여부',
+          '지시압력계의 정상 여부',
+          '수동식 분말소화기 내용연수(10년) 적정 여부'
+        ]
+      },
+      {
+        name: '자동확산 소화기',
+        items: [
+          '설치상태 및 외형의 변형·손상·부식 여부',
+          '지시압력계의 정상 여부'
+        ]
+      },
+      {
+        name: '주거용 주방자동 소화장치',
+        items: [
+          '소화약제용기 지시압력계의 정상 여부',
+          '수신부의 전원표시등 정상 점등 여부'
+        ]
+      },
+      {
+        name: '스프링클러',
+        items: [
+          '헤드 변형·손상·부식 유무'
+        ]
+      }
+    ]
+  },
+  {
+    title: '경보 설비',
+    icon: '&#128276;',
+    groups: [
+      {
+        name: '자동화재 탐지설비',
+        items: [
+          '감지기 변형·손상·탈락 여부'
+        ]
+      },
+      {
+        name: '가스누설 경보기',
+        items: [
+          '전원표시등 정상 점등 여부'
+        ]
+      }
+    ]
+  },
+  {
+    title: '피난 설비',
+    icon: '&#128682;',
+    groups: [
+      {
+        name: '완강기',
+        items: [
+          '피난기구 위치 적정성 여부',
+          '완강기 외형의 변형·손상·부식 여부',
+          '설치 여부 및 장애물로 인한 피난 지장 여부'
+        ]
+      },
+      {
+        name: '피난구용 내림식 사다리',
+        items: [
+          '피난기구 위치 표지 및 사용방법 표지 유무',
+          '설치 여부 및 장애물로 인한 피난 지장 여부'
+        ]
+      }
+    ]
+  },
+  {
+    title: '기타 설비',
+    icon: '&#127968;',
+    groups: [
+      {
+        name: '대피공간',
+        items: [
+          '방화문(방화구획)의 적정 여부',
+          '대피공간 내 물건 적치 여부'
+        ]
+      },
+      {
+        name: '방화문',
+        items: [
+          '방화문 폐쇄 여부',
+          '방화문 변형·손상 여부'
+        ]
+      },
+      {
+        name: '피난유도선',
+        items: [
+          '피난유도선 설치상태 및 변형·손상 여부'
+        ]
+      }
+    ]
+  }
+];
+
+// 렌더링
+function render() {
+  var container = document.getElementById('check-sections');
+  var html = '';
+  var itemIdx = 0;
+
+  sections.forEach(function(sec) {
+    html += '<div class="section">';
+    html += '<div class="section-header">'+sec.icon+' '+sec.title+'</div>';
+    html += '<div class="section-body">';
+    sec.groups.forEach(function(grp) {
+      html += '<div class="item-group">';
+      html += '<div class="item-group-title">'+grp.name+'</div>';
+      grp.items.forEach(function(item) {
+        var key = 'item-'+itemIdx;
+        var cur = results[key] || '';
+        html += '<div class="item">';
+        html += '<div class="item-text">'+item+'</div>';
+        html += '<div class="item-btns">';
+        ['정상','불량','해당없음'].forEach(function(opt) {
+          var sel = cur === opt ? ' sel-'+opt : '';
+          html += '<button class="item-btn'+sel+'" onclick="pick(\''+key+'\',\''+opt+'\',this)">'+opt+'</button>';
+        });
+        html += '</div></div>';
+        itemIdx++;
+      });
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  container.innerHTML = html;
+  updateProgress();
+}
+
+function pick(key, val, btn) {
+  results[key] = results[key] === val ? '' : val;
+  // 같은 item-btns 안 버튼들 업데이트
+  var btns = btn.parentElement.querySelectorAll('.item-btn');
+  btns.forEach(function(b) {
+    b.className = 'item-btn';
+    if (results[key] && b.textContent === results[key]) {
+      b.className = 'item-btn sel-'+results[key];
+    }
+  });
+  updateProgress();
+}
+
+function updateProgress() {
+  var total = 0, done = 0;
+  sections.forEach(function(sec) {
+    sec.groups.forEach(function(grp) {
+      grp.items.forEach(function(_, i) { total++; });
+    });
+  });
+  Object.values(results).forEach(function(v) { if (v) done++; });
+  document.getElementById('prog-count').textContent = done + ' / ' + total;
+  document.getElementById('prog-fill').style.width = (total ? Math.round(done/total*100) : 0) + '%';
+}
+
+function setChecker(type) {
+  checker = type;
+  document.getElementById('chk-입주자').className = 'checker-opt' + (type==='입주자' ? ' on-입주자' : '');
+  document.getElementById('chk-소방').className = 'checker-opt' + (type==='소방안전관리자' ? ' on-소방' : '');
+}
+
+function resetAll() {
+  if (!confirm('모든 체크를 초기화할까요?')) return;
+  results = {};
+  render();
+}
+
+// PDF 생성
+function makePDF() {
+  var date = document.getElementById('f-date').value;
+  var name = document.getElementById('f-name').value || '(미입력)';
+  var room = document.getElementById('f-room').value || '(미입력)';
+  var tel  = document.getElementById('f-tel').value  || '';
+
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+
+  // 한글 폰트 없으므로 내용을 영문/기호로 처리 + 한글은 별도 처리
+  // 실제로는 jsPDF에 한글 폰트 내장이 필요 - 대신 HTML→Canvas 방식 사용
+  alert('PDF 생성 중입니다... 잠시 후 다운로드됩니다!');
+
+  // HTML을 window.print()로 PDF 출력
+  printAsPDF();
+}
+
+function printAsPDF() {
+  var date = document.getElementById('f-date').value || '____년 ____월 ____일';
+  var name = document.getElementById('f-name').value || '';
+  var room = document.getElementById('f-room').value || '';
+  var tel  = document.getElementById('f-tel').value  || '';
+  var chkr = checker || '';
+
+  var itemIdx = 0;
+  var tableRows = '';
+
+  sections.forEach(function(sec) {
+    var totalItems = sec.groups.reduce(function(s,g){ return s+g.items.length; }, 0);
+    var firstGroup = true;
+    var secRowspan = totalItems;
+
+    sec.groups.forEach(function(grp, gi) {
+      var firstItem = true;
+      grp.items.forEach(function(item, ii) {
+        var key = 'item-'+itemIdx;
+        var val = results[key] || '';
+        var c1 = val==='정상'   ? '&#10004;' : '&#9633;';
+        var c2 = val==='불량'   ? '&#10004;' : '&#9633;';
+        var c3 = val==='해당없음'? '&#10004;' : '&#9633;';
+
+        tableRows += '<tr>';
+        if (firstGroup && gi===0 && ii===0) {
+          tableRows += '<td rowspan="'+secRowspan+'" class="sec-cell">'+sec.title+'</td>';
+        }
+        if (firstItem && ii===0) {
+          tableRows += '<td rowspan="'+grp.items.length+'" class="grp-cell">'+grp.name+'</td>';
+          firstItem = false;
+        }
+        tableRows += '<td class="item-cell">'+item+'</td>';
+        tableRows += '<td class="chk-cell">'+c1+' 정상&nbsp;&nbsp;'+c2+' 불량&nbsp;&nbsp;'+c3+' 해당없음</td>';
+        tableRows += '</tr>';
+
+        if (gi > 0 && ii === 0) firstGroup = false;
+        itemIdx++;
+      });
+    });
+  });
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+  '<style>' +
+  'body{font-family:"맑은 고딕","나눔고딕",sans-serif;font-size:10pt;margin:15mm}' +
+  'h2{text-align:center;font-size:14pt;margin-bottom:4mm}' +
+  '.note{text-align:center;font-size:9pt;margin-bottom:4mm}' +
+  '.info-table{width:100%;border-collapse:collapse;margin-bottom:4mm}' +
+  '.info-table td{border:1px solid #333;padding:3mm 4mm;font-size:10pt}' +
+  '.info-table .lbl{background:#f0f0f0;font-weight:bold;width:80px}' +
+  'table.main{width:100%;border-collapse:collapse}' +
+  'table.main td{border:1px solid #333;padding:2mm 3mm;font-size:9pt;vertical-align:middle}' +
+  '.sec-cell{background:#1e3a5f;color:#fff;font-weight:bold;text-align:center;width:60px}' +
+  '.grp-cell{background:#e8f0fe;font-weight:bold;text-align:center;width:100px}' +
+  '.item-cell{width:auto}' +
+  '.chk-cell{width:160px;white-space:nowrap}' +
+  '.sign{margin-top:6mm;text-align:right;font-size:10pt}' +
+  '@media print{body{margin:10mm}}' +
+  '</style></head><body>' +
+  '<h2>소방시설 외관점검표 (세대 점검용)</h2>' +
+  '<p class="note">※ &#10004;에는 해당되는 곳에 표시합니다.</p>' +
+  '<table class="info-table">' +
+  '<tr><td class="lbl">대상명</td><td>'+name+'</td><td class="lbl">동호수</td><td>'+room+'</td></tr>' +
+  '<tr><td class="lbl">점검일</td><td>'+date+'</td><td class="lbl">전화번호</td><td>'+tel+'</td></tr>' +
+  '<tr><td class="lbl">점검자</td><td colspan="3">'+
+    (chkr==='입주자'?'&#10004;':'&#9633;')+' 입주자&nbsp;&nbsp;&nbsp;'+
+    (chkr==='소방안전관리자'?'&#10004;':'&#9633;')+' 소방안전관리자</td></tr>' +
+  '</table>' +
+  '<table class="main">' +
+  '<tr><td style="background:#1e3a5f;color:#fff;font-weight:bold;text-align:center" colspan="2">점 검 항 목</td>' +
+  '<td style="background:#1e3a5f;color:#fff;font-weight:bold;text-align:center">점 검 내 용</td>' +
+  '<td style="background:#1e3a5f;color:#fff;font-weight:bold;text-align:center;width:160px">점 검 결 과</td></tr>' +
+  tableRows +
+  '</table>' +
+  '<div class="sign">점검자 서명: _________________________ (인)</div>' +
+  '</body></html>';
+
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(function(){ w.print(); }, 800);
+}
+
+// 초기화
+document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+render();
+</script>
+</body>
+</html>
